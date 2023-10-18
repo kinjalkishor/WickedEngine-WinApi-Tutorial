@@ -235,7 +235,8 @@ using namespace wm_wnd2;
 // CONFIGURE HERE FIRST
 #define WE_PATH		"E:/nex/WickedEngine_test/"
 
-#define CONTENT_PATH  WE_PATH "Content/models/"
+#define WE_CONTENT_PATH  WE_PATH "Content/models/"
+#define WE_SHADER_PATH  WE_PATH "WickedEngine/shaders/"
 
 //E:/nex/WickedEngine_test/BUILD/x64/Release/WickedEngine_Windows.lib
 #pragma comment(lib, WE_PATH "BUILD/x64/Release/WickedEngine_Windows.lib")
@@ -280,13 +281,24 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 
 	//------------------------------
 	//-wi
+	println("------------------------------");
 	println("CHECK: Compile in Release mode.");
 	println("CHECK: Set WE_PATH to WickedEngine path.");
-	println("CHECK: Copy 'shaders' folder from 'WickedEngine/Template_Windows' to 'test_we/x64/Release'.");
+	println("CHECK: If program window auto closes, compile again, this time compiled shaders will be found from previous run.");
+	println("------------------------------");
+
 	wchar_t w_lpCmdLine[256] = {};
 	sdf2::strf_wcs_from_mbs(w_lpCmdLine, sdf2::strz_cap(w_lpCmdLine), szCmdLine, sdf2::strfz_len(szCmdLine));
 	wi::arguments::Parse(w_lpCmdLine); // wants wchar_t from wWinMain, convert szCmdLine to wstring first.
 
+	// Set shader source path.
+	std::string CURR_SHADERPATH = WE_SHADER_PATH;
+	println("Shader files source path: {}", CURR_SHADERPATH);
+	wi::renderer::SetShaderSourcePath(CURR_SHADERPATH);
+	// Set compiled shader binary path.
+	wi::renderer::SetShaderPath(wi::helper::GetCurrentPath() + "/shaders/");
+
+	// Initialize Wicked Engine after setting shader path.
 	application.Initialize();
 	// Assign window that you will render to:
 	application.SetWindow(m_hwnd);
@@ -294,11 +306,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 	application.infoDisplay.active = true;
 	application.infoDisplay.watermark = true;
 	application.infoDisplay.resolution = true;
-	application.infoDisplay.fpsinfo = true;
-	// Check shader path. "shaders" folder should be here or program will crash.
-	std::string CUR_SHADERPATH = wi::helper::GetCurrentPath() + "/shaders/";
-	println("{}", CUR_SHADERPATH);
-
+	application.infoDisplay.fpsinfo = true;	
 	
 	//------------------------------
 
@@ -326,6 +334,8 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine
 			//rs->swap_buffers();
 			//------------------------------
 			//-wi
+			if (wi::input::Press(wi::input::KEYBOARD_BUTTON_SPACE)) { println("SPACEBAR Press"); } // You can check if a button is pressed or not (this only triggers once)
+			if (wi::input::Down(wi::input::KEYBOARD_BUTTON_SPACE)) { println("SPACEBAR Down"); } // You can check if a button is pushed down or not (this triggers repeatedly)
 			application.Run(); // run the update - render loop
 			//------------------------------
     
@@ -393,8 +403,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
 
     case WM_DPICHANGED:
-		if (application.is_window_active)
+		if (application.is_window_active) {
 			application.SetWindow(hWnd);
+		}
         break;
 
 	case WM_CHAR:
